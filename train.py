@@ -29,11 +29,13 @@ class EarlyStopping:
 
     def save_checkpoint(self, model):
         torch.save(model.state_dict(), self.path)
+        if hasattr(model, 'encoder'):
+            torch.save(model.encoder.encoder.state_dict(), 'models/encoder.pth')
 
 def train_autoencoder(model, train_loader, val_loader, num_epochs=15, lr=1e-3, device='cpu'):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3)
     
     os.makedirs('models', exist_ok=True)
     early_stopping = EarlyStopping(patience=5, path='models/best_autoencoder.pth')
@@ -80,7 +82,7 @@ def train_autoencoder(model, train_loader, val_loader, num_epochs=15, lr=1e-3, d
 def train_temporal_model(model, train_loader, val_loader, num_epochs=30, lr=1e-4, device='cpu'):
     criterion = nn.CrossEntropyLoss(ignore_index=-1)
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=3, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=3)
     
     os.makedirs('models', exist_ok=True)
     early_stopping = EarlyStopping(patience=5, path='models/best_temporal_model.pth')

@@ -12,8 +12,8 @@ export default function Navbar({ activeTab, setActiveTab, healthInfo }) {
   ];
 
   return (
-    <header className="glass-header sticky top-0 z-50 px-6 py-3 flex flex-wrap items-center justify-between shadow-lg">
-      <div className="flex items-center gap-3">
+    <header className="glass-header sticky top-0 z-50 px-8 py-4 flex flex-wrap items-center justify-between shadow-lg">
+      <div className="flex items-center gap-4">
         <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center shadow-inner">
           <Radar className="w-6 h-6 animate-pulse" />
         </div>
@@ -22,9 +22,7 @@ export default function Navbar({ activeTab, setActiveTab, healthInfo }) {
             <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">
               GEO-SAR
             </h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono font-medium">
-              v2.0 PyTorch
-            </span>
+            
           </div>
           <p className="text-xs text-slate-400">Spatio-Temporal Transformer & Autoencoder Flood Analytics</p>
         </div>

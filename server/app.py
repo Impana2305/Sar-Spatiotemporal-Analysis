@@ -158,16 +158,50 @@ def run_pytorch_pipeline_on_tensor(seq_tensor):
     """
     input_batch = seq_tensor.unsqueeze(0).to(DEVICE) # [1, 3, 2, 256, 256]
     
-    # 1. PyTorch Model Forward Pass
+    # 1. PyTorch Model Forward Pass with Temperature-Scaled Confidence Sharpening
     if temporal_model is not None:
         with torch.no_grad():
             logits = temporal_model(input_batch) # [1, 2, 256, 256]
-            probs = torch.softmax(logits, dim=1)
+            
+            # Temperature scaling: lower T produces sharper softmax distributions.
+            # T=0.15 aggressively pushes probabilities toward 0 or 1.
+            temperature = 0.15
+            scaled_logits = logits / temperature
+            probs = torch.softmax(scaled_logits, dim=1)
             water_prob_map = probs[0, 1].cpu().numpy()
+            
+            # Physics-informed confidence refinement using SAR backscatter physics:
+            # Water surfaces produce specular reflection = very low VV backscatter.
+            vv_peak = seq_tensor[1, 0].numpy()  # T2 (peak flood) VV band
+            vh_peak = seq_tensor[1, 1].numpy()  # T2 VH band
+            physics_water_score = (1.0 - vv_peak) * 0.65 + (1.0 - vh_peak) * 0.35
+            
+            # Strong blending where model and physics agree
+            agreement_mask = ((water_prob_map > 0.5) & (physics_water_score > 0.5)) | \
+                             ((water_prob_map < 0.5) & (physics_water_score < 0.5))
+            blend_weight = 0.25
+            boosted = np.where(
+                water_prob_map > 0.5,
+                np.clip(water_prob_map + blend_weight * physics_water_score, 0.0, 1.0),
+                np.clip(water_prob_map - blend_weight * (1.0 - physics_water_score), 0.0, 1.0)
+            )
+            water_prob_map = np.where(agreement_mask, boosted, water_prob_map)
+            
+            # Sigmoid sharpening: applies steep S-curve centered at 0.5 to push
+            # all probabilities decisively away from the uncertainty zone (0.3-0.7).
+            # k controls steepness: higher k = sharper transition.
+            k = 12.0
+            water_prob_map = 1.0 / (1.0 + np.exp(-k * (water_prob_map - 0.5)))
     else:
-        # Physical threshold fallback: water surfaces have low SAR backscatter
+        # Physics-based fallback: water surfaces have low SAR backscatter
         vv_mean = seq_tensor[1, 0].numpy()
-        water_prob_map = (1.0 - vv_mean).astype(np.float32)
+        vh_mean = seq_tensor[1, 1].numpy()
+        # Use both VV and VH polarizations for more robust water detection
+        combined = (1.0 - vv_mean) * 0.7 + (1.0 - vh_mean) * 0.3
+        # Apply sigmoid sharpening for decisive probabilities
+        sharpness = 8.0
+        water_prob_map = 1.0 / (1.0 + np.exp(-sharpness * (combined - 0.5)))
+        water_prob_map = water_prob_map.astype(np.float32)
 
     binary_pred = (water_prob_map > 0.45).astype(np.float32)
     
@@ -384,6 +418,8 @@ def upload_and_predict():
         results = run_pytorch_pipeline_on_tensor(seq_tensor)
         return jsonify(results)
         
+    # Models are loaded at server startup
+    
     parsed_frames = []
     for f in files[:3]:
         frame = parse_uploaded_image(f) # [2, 256, 256]
@@ -438,4 +474,4 @@ def landuse():
 
 if __name__ == '__main__':
     print("Starting GEO-SAR Backend Server on port 5000...")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

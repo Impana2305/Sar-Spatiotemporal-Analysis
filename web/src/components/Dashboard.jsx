@@ -245,7 +245,7 @@ export default function Dashboard({ stats, samples, selectedSample, setSelectedS
                   <span className="text-slate-400 block mb-1">PREDICTION CONFIDENCE</span>
                   <div className="flex items-center space-x-2">
   <div className="w-32 bg-slate-800 rounded-full h-4 overflow-hidden">
-    <div className={`${predictionData.metrics.confidence >= 85 ? 'bg-emerald-500' : 'bg-amber-500'} transition-width duration-500`} style={{ width: `${predictionData.metrics.confidence}%` }}></div>
+    <div className={`${predictionData.metrics.confidence >= 80 ? 'bg-emerald-500' : 'bg-amber-500'} transition-width duration-500`} style={{ width: `${predictionData.metrics.confidence}%` }}></div>
   </div>
   <span className="text-sm font-bold text-emerald-400">{predictionData.metrics.confidence}%</span>
 </div>

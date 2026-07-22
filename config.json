@@ -18,12 +18,12 @@
         "transformer_layers": 2
     },
     "training": {
-        "autoencoder_epochs": 15,
+        "autoencoder_epochs": 25,
         "autoencoder_lr": 1e-3,
-        "temporal_epochs": 30,
-        "temporal_lr": 1e-4,
+        "temporal_epochs": 80,
+        "temporal_lr": 5e-5,
         "batch_size": 16,
-        "early_stopping_patience": 5,
+        "early_stopping_patience": 15,
         "seed": 42
     }
 }

@@ -123,10 +123,10 @@ def train_temporal_model(model, train_loader, val_loader, num_epochs=30, lr=1e-4
         all_preds = torch.cat(all_preds)
         all_targets = torch.cat(all_targets)
         
-        iou, acc, precision, recall, f1 = calculate_metrics(all_preds, all_targets)
+        iou, acc, precision, recall, f1, dice = calculate_metrics(all_preds, all_targets)
         
         print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
-        print(f"Val Metrics - IoU: {iou:.4f}, Acc: {acc:.4f}, F1: {f1:.4f}, P: {precision:.4f}, R: {recall:.4f}")
+        print(f"Val Metrics - IoU: {iou:.4f}, Dice: {dice:.4f}, Acc: {acc:.4f}, F1: {f1:.4f}, P: {precision:.4f}, R: {recall:.4f}")
         
         # Maximize IoU
         scheduler.step(iou)

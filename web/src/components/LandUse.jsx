@@ -3,13 +3,17 @@ import axios from 'axios';
 import { PieChart as RePie, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { PieChart, Trees, Building2, Droplets, Mountain } from 'lucide-react';
 
-export default function LandUse({ selectedSample }) {
+export default function LandUse({ selectedSample, predictionData }) {
   const [landData, setLandData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchLandUse();
-  }, [selectedSample]);
+    if (predictionData?.land_use) {
+      setLandData({ land_use_distribution: predictionData.land_use });
+    } else {
+      fetchLandUse();
+    }
+  }, [selectedSample, predictionData]);
 
   const fetchLandUse = async () => {
     setLoading(true);
@@ -37,7 +41,7 @@ export default function LandUse({ selectedSample }) {
           </div>
           <h2 className="text-2xl font-bold text-white">Land Use / Land Cover (LULC) Classification</h2>
           <p className="text-slate-300 text-sm mt-1">
-            Analyzing terrain cover distribution and flood exposure for <strong>{selectedSample?.name || 'Mekong Delta'}</strong>.
+            Analyzing terrain cover distribution and flood exposure for <strong>{selectedSample?.name || 'Target Scene'}</strong>.
           </p>
         </div>
       </div>

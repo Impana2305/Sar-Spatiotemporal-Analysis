@@ -37,7 +37,7 @@ export default function App() {
         setSelectedSample(sampleRes.data[0]);
       }
     } catch (err) {
-      console.warn('Backend API connection failed, falling back to mock state:', err);
+      console.warn('Backend API connection failed, falling back to local state:', err);
       setHealthInfo({ status: 'offline', device: 'CPU' });
       setSamples([
         {
@@ -67,7 +67,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (selectedSample) {
+    if (selectedSample && selectedSample.id !== 'uploaded_raster') {
       runInference();
     }
   }, [selectedSample]);
@@ -81,6 +81,42 @@ export default function App() {
       setPredictionData(res.data);
     } catch (err) {
       console.error('Inference error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (files) => {
+    if (!files || files.length === 0) {
+      runInference();
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      files.forEach((f) => formData.append('files', f));
+      
+      const res = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setPredictionData(res.data);
+      setSelectedSample({
+        id: 'uploaded_raster',
+        name: `Custom Upload: ${files[0].name}`,
+        coordinates: [10.2833, 105.9667],
+        date_t1: 'User Upload T1',
+        date_t2: 'User Upload T2 (Peak)',
+        date_t3: 'User Upload T3 (Recession)',
+        region: 'Uploaded SAR Raster',
+        description: `Parsed ${files.length} real SAR image(s) through PyTorch ConvAutoencoder + Transformer model.`,
+        seed: 999
+      });
+
+      // Seamless user flow: Auto-navigate to Dashboard tab to view full assessment!
+      setActiveTab('dashboard');
+    } catch (err) {
+      console.error('File upload error:', err);
     } finally {
       setLoading(false);
     }
@@ -100,6 +136,17 @@ export default function App() {
             predictionData={predictionData}
             runInference={runInference}
             loading={loading}
+            setActiveTab={setActiveTab}
+          />
+        )}
+
+        {activeTab === 'upload' && (
+          <UploadPipeline
+            runInference={runInference}
+            handleFileUpload={handleFileUpload}
+            loading={loading}
+            predictionData={predictionData}
+            setActiveTab={setActiveTab}
           />
         )}
 
@@ -117,15 +164,11 @@ export default function App() {
         )}
 
         {activeTab === 'hydrograph' && (
-          <Hydrograph selectedSample={selectedSample} />
+          <Hydrograph selectedSample={selectedSample} predictionData={predictionData} />
         )}
 
         {activeTab === 'landuse' && (
-          <LandUse selectedSample={selectedSample} />
-        )}
-
-        {activeTab === 'upload' && (
-          <UploadPipeline runInference={runInference} loading={loading} predictionData={predictionData} />
+          <LandUse selectedSample={selectedSample} predictionData={predictionData} />
         )}
       </main>
 

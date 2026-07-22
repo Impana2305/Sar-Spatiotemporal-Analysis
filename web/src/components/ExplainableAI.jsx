@@ -7,8 +7,12 @@ export default function ExplainableAI({ selectedSample, predictionData }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchExplainability();
-  }, [selectedSample]);
+    if (predictionData?.xai) {
+      setXaiData(predictionData.xai);
+    } else {
+      fetchExplainability();
+    }
+  }, [selectedSample, predictionData]);
 
   const fetchExplainability = async () => {
     setLoading(true);
@@ -34,7 +38,7 @@ export default function ExplainableAI({ selectedSample, predictionData }) {
           </div>
           <h2 className="text-2xl font-bold text-white">Explainable AI (XAI) Diagnostics</h2>
           <p className="text-slate-300 text-sm mt-1">
-            Inspecting <strong>Grad-CAM Spatial Heatmaps</strong>, <strong>Temporal Self-Attention Weights</strong>, and <strong>SAR Change Detection Maps</strong>.
+            Inspecting <strong>Grad-CAM Spatial Heatmaps</strong>, <strong>Temporal Self-Attention Weights</strong>, and <strong>SAR Change Detection Maps</strong> for {selectedSample?.name || 'Target Scene'}.
           </p>
         </div>
 
@@ -62,11 +66,11 @@ export default function ExplainableAI({ selectedSample, predictionData }) {
           </div>
 
           <div className="aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950 relative">
-            {xaiData ? (
+            {xaiData?.gradcam_heatmap ? (
               <img src={xaiData.gradcam_heatmap} alt="Grad-CAM" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-400 font-mono text-xs">
-                Loading Grad-CAM...
+                Generating Grad-CAM...
               </div>
             )}
             <div className="absolute bottom-2 left-2 right-2 p-2 rounded bg-slate-950/80 backdrop-blur-sm text-[11px] text-slate-300 font-mono border border-slate-800">
@@ -87,11 +91,11 @@ export default function ExplainableAI({ selectedSample, predictionData }) {
           </div>
 
           <div className="aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950 relative">
-            {xaiData ? (
+            {xaiData?.change_detection_heatmap ? (
               <img src={xaiData.change_detection_heatmap} alt="Change Detection" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-400 font-mono text-xs">
-                Loading Change Detection...
+                Generating Change Map...
               </div>
             )}
             <div className="absolute bottom-2 left-2 right-2 p-2 rounded bg-slate-950/80 backdrop-blur-sm text-[11px] text-slate-300 font-mono border border-slate-800">

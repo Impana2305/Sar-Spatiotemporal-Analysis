@@ -4,11 +4,11 @@ import { Radar, Layers, Eye, Activity, PieChart, Upload, Cpu } from 'lucide-reac
 export default function Navbar({ activeTab, setActiveTab, healthInfo }) {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Radar },
+    { id: 'upload', label: 'Upload SAR Raster', icon: Upload },
     { id: 'map', label: 'GIS Flood Prediction Map', icon: Layers },
     { id: 'xai', label: 'Explainable AI (XAI)', icon: Eye },
     { id: 'hydrograph', label: 'Temporal Hydrograph', icon: Activity },
     { id: 'landuse', label: 'Land Use Classification', icon: PieChart },
-    { id: 'upload', label: 'Upload & Inference', icon: Upload },
   ];
 
   return (
@@ -62,7 +62,7 @@ export default function Navbar({ activeTab, setActiveTab, healthInfo }) {
         </div>
         {healthInfo?.device && (
           <div className="hidden lg:flex items-center gap-1.5 text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-md border border-slate-800">
-            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+            <Cpu className="w-3.5 h-3.5" />
             <span>{healthInfo.device.toUpperCase()}</span>
           </div>
         )}

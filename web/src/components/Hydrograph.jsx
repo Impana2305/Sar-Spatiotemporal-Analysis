@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { Activity, AlertTriangle, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Activity, TrendingUp } from 'lucide-react';
 
-export default function Hydrograph({ selectedSample }) {
+export default function Hydrograph({ selectedSample, predictionData }) {
   const [hydroData, setHydroData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchHydrograph();
-  }, [selectedSample]);
+    if (predictionData?.hydrograph) {
+      setHydroData(predictionData.hydrograph);
+    } else {
+      fetchHydrograph();
+    }
+  }, [selectedSample, predictionData]);
 
   const fetchHydrograph = async () => {
     setLoading(true);
@@ -35,7 +39,7 @@ export default function Hydrograph({ selectedSample }) {
           </div>
           <h2 className="text-2xl font-bold text-white">Temporal Inundation Hydrograph</h2>
           <p className="text-slate-300 text-sm mt-1">
-            Tracking temporal flood progression, crest timeline, and surface water volume changes for {selectedSample?.name || 'Mekong Delta'}.
+            Tracking temporal flood progression, crest timeline, and surface water volume changes for {selectedSample?.name || 'Target Scene'}.
           </p>
         </div>
 

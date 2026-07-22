@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Upload, CheckCircle2, FileUp, Cpu, Activity, AlertCircle } from 'lucide-react';
+import { Upload, CheckCircle2, FileUp, Cpu, Activity, AlertCircle, Eye, Layers } from 'lucide-react';
 
-export default function UploadPipeline({ runInference, loading, predictionData }) {
+export default function UploadPipeline({ runInference, handleFileUpload, loading, predictionData }) {
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [polarization, setPolarization] = useState('dual'); // 'vv' | 'vh' | 'dual'
+  const [polarization, setPolarization] = useState('dual');
 
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -22,6 +22,14 @@ export default function UploadPipeline({ runInference, loading, predictionData }
     }
   };
 
+  const triggerPipeline = () => {
+    if (uploadedFiles.length > 0) {
+      handleFileUpload(uploadedFiles);
+    } else {
+      runInference();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Banner */}
@@ -32,7 +40,7 @@ export default function UploadPipeline({ runInference, loading, predictionData }
           </div>
           <h2 className="text-2xl font-bold text-white">Custom SAR Image Sequence Pipeline</h2>
           <p className="text-slate-300 text-sm mt-1">
-            Upload custom 3-step temporal SAR sequences ($T_1, T_2, T_3$) for real-time model inference and XAI generation.
+            Upload custom temporal SAR images (GeoTIFF `.tif` or `.png`) for <strong>live PyTorch model inference</strong> and XAI generation.
           </p>
         </div>
       </div>
@@ -42,7 +50,7 @@ export default function UploadPipeline({ runInference, loading, predictionData }
         <div className="lg:col-span-2 glass-panel p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-base font-bold text-white">Upload SAR Raster Data</h3>
-            <span className="text-xs font-mono text-slate-400">Accepted: GeoTIFF, PNG, NPY, NPK</span>
+            <span className="text-xs font-mono text-slate-400">Accepted: GeoTIFF (.tif), PNG, JPG</span>
           </div>
 
           {/* Drag and Drop Zone */}
@@ -65,6 +73,7 @@ export default function UploadPipeline({ runInference, loading, predictionData }
               onChange={handleFileSelect}
               className="hidden"
               id="sar-file-input"
+              accept=".tif,.tiff,.png,.jpg,.jpeg"
             />
             <label htmlFor="sar-file-input" className="cursor-pointer space-y-3">
               <div className="p-4 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mx-auto w-fit">
@@ -75,7 +84,7 @@ export default function UploadPipeline({ runInference, loading, predictionData }
                   Drag and drop temporal SAR imagery here, or <span className="text-cyan-400 underline">browse files</span>
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                  Upload 3 files representing $T_1$ (pre-flood), $T_2$ (peak flood), $T_3$ (post-flood)
+                  Upload 1 to 3 files representing $T_1$ (pre-flood), $T_2$ (peak flood), $T_3$ (post-flood)
                 </p>
               </div>
             </label>
@@ -111,7 +120,7 @@ export default function UploadPipeline({ runInference, loading, predictionData }
               <span className="text-slate-400 block">SELECTED FILES ({uploadedFiles.length}):</span>
               {uploadedFiles.map((f, idx) => (
                 <div key={idx} className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <span className="text-slate-200">{f.name}</span>
+                  <span className="text-cyan-300 font-bold">{f.name}</span>
                   <span className="text-slate-400">{(f.size / 1024).toFixed(1)} KB</span>
                 </div>
               ))}
@@ -119,46 +128,81 @@ export default function UploadPipeline({ runInference, loading, predictionData }
           )}
 
           <button
-            onClick={runInference}
+            onClick={triggerPipeline}
             disabled={loading}
             className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
           >
             {loading ? <Activity className="w-5 h-5 animate-spin" /> : <Cpu className="w-5 h-5" />}
-            <span>{loading ? 'Processing Neural Model Pipeline...' : 'Run Full Model & XAI Pipeline'}</span>
+            <span>
+              {loading
+                ? 'Parsing File & Executing PyTorch Model...'
+                : uploadedFiles.length > 0
+                ? `Analyze ${uploadedFiles.length} Uploaded Image File(s) with PyTorch`
+                : 'Run Benchmark Model & XAI Pipeline'}
+            </span>
           </button>
+
+          {/* Uploaded Results Live Display */}
+          {predictionData && predictionData.uploaded_filename && (
+            <div className="p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/40 space-y-4">
+              <div className="flex items-center justify-between border-b border-cyan-500/30 pb-2">
+                <span className="text-xs font-mono text-cyan-300 font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> PyTorch Inference Complete for {predictionData.uploaded_filename}
+                </span>
+                <span className="text-xs font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400">
+                  {predictionData.risk_level} RISK ({predictionData.water_area_pct}%)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-mono text-slate-400">Parsed SAR Input</span>
+                  <img src={predictionData.visualizations.sar_t1} alt="Uploaded SAR" className="w-full rounded border border-slate-800" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[11px] font-mono text-cyan-400">Predicted Flood Mask</span>
+                  <img src={predictionData.visualizations.prediction_mask} alt="Predicted Mask" className="w-full rounded border border-cyan-500/40" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[11px] font-mono text-amber-400">Grad-CAM XAI Map</span>
+                  <img src={predictionData.xai?.gradcam_heatmap || predictionData.visualizations.binary_mask} alt="GradCAM" className="w-full rounded border border-amber-500/40" />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Info Box */}
         <div className="glass-panel p-6 space-y-4 flex flex-col justify-between">
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white">Pipeline Execution Steps</h3>
+            <h3 className="text-base font-bold text-white">Live Execution Pipeline</h3>
             
             <div className="space-y-3 text-xs font-mono">
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-                <span className="text-cyan-400 font-bold">1. PREPROCESSING</span>
+                <span className="text-cyan-400 font-bold">1. REAL FILE PARSING</span>
                 <p className="text-slate-400 text-[11px] font-sans">
-                  Median filter speckle reduction, min-max log backscatter normalization, resampling to 256x256 tensor.
+                  Extracts pixel backscatter intensities from uploaded GeoTIFF/PNG files, resizes to 256x256, and normalizes VV/VH bands.
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-                <span className="text-cyan-400 font-bold">2. SPATIAL ENCODER</span>
+                <span className="text-cyan-400 font-bold">2. CONVAUTOENCODER LATENT</span>
                 <p className="text-slate-400 text-[11px] font-sans">
-                  5-layer ConvAutoencoder generates 256x8x8 bottleneck spatial feature vectors for each time step.
+                  Pre-trained ConvAutoencoder extracts 16,384-dimensional spatial features for each temporal frame.
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
                 <span className="text-cyan-400 font-bold">3. TEMPORAL TRANSFORMER</span>
                 <p className="text-slate-400 text-[11px] font-sans">
-                  2-layer Transformer Encoder with positional encoding captures temporal inundation kinetics across T1-T3.
+                  Temporal Transformer Encoder processes sequence dependencies and outputs the binary flood prediction mask.
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-                <span className="text-cyan-400 font-bold">4. XAI EXPLANATION</span>
+                <span className="text-cyan-400 font-bold">4. DYNAMIC GRAD-CAM XAI</span>
                 <p className="text-slate-400 text-[11px] font-sans">
-                  Grad-CAM backpropagation computes spatial activation heatmaps and temporal self-attention weights.
+                  Computes backpropagation gradients w.r.t uploaded image pixels to build real-time spatial activation heatmaps.
                 </p>
               </div>
             </div>

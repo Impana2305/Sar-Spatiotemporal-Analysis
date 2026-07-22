@@ -1,7 +1,7 @@
 import React from 'react';
-import { Activity, ShieldAlert, Award, Database, Layers, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { Activity, ShieldAlert, Award, Database, Layers, ArrowRight, Zap, CheckCircle2, Eye, TrendingUp } from 'lucide-react';
 
-export default function Dashboard({ stats, samples, selectedSample, setSelectedSample, predictionData, runInference, loading }) {
+export default function Dashboard({ stats, samples, selectedSample, setSelectedSample, predictionData, runInference, loading, setActiveTab }) {
   const metrics = stats?.model_metrics || {
     accuracy: 0.942,
     dice: 0.915,
@@ -12,6 +12,44 @@ export default function Dashboard({ stats, samples, selectedSample, setSelectedS
 
   return (
     <div className="space-y-6">
+      {/* Upload Success Alert Banner */}
+      {predictionData && predictionData.uploaded_filename && (
+        <div className="glass-panel p-4 bg-cyan-950/60 border border-cyan-500/50 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            <div>
+              <h4 className="text-sm font-bold text-white font-mono">
+                Live Assessment for Uploaded Image: <span className="text-cyan-400">{predictionData.uploaded_filename}</span>
+              </h4>
+              <p className="text-xs text-slate-300">
+                PyTorch ConvAutoencoder + Transformer inference completed ({predictionData.water_area_pct}% surface water detected).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <button
+              onClick={() => setActiveTab && setActiveTab('map')}
+              className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 flex items-center gap-1.5"
+            >
+              <Layers className="w-3.5 h-3.5" /> GIS Map
+            </button>
+            <button
+              onClick={() => setActiveTab && setActiveTab('xai')}
+              className="px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 flex items-center gap-1.5"
+            >
+              <Eye className="w-3.5 h-3.5" /> Grad-CAM XAI
+            </button>
+            <button
+              onClick={() => setActiveTab && setActiveTab('hydrograph')}
+              className="px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 flex items-center gap-1.5"
+            >
+              <TrendingUp className="w-3.5 h-3.5" /> Hydrograph
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Banner */}
       <div className="glass-panel p-6 radar-scan-container bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-cyan-950/40 relative overflow-hidden">
         <div className="radar-scan-line" />

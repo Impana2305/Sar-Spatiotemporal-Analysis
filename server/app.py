@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
 import joblib
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 # Add root directory to sys.path to import project modules
@@ -19,7 +19,8 @@ if ROOT_DIR not in sys.path:
 
 from models import ConvAutoencoder, TemporalTransformerPredictor, SpatialEncoder
 
-app = Flask(__name__)
+DIST_DIR = os.path.join(ROOT_DIR, 'web', 'dist')
+app = Flask(__name__, static_folder=DIST_DIR, static_url_path='')
 CORS(app)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -472,6 +473,25 @@ def landuse():
         'land_use_distribution': results['land_use']
     })
 
+# --- FRONTEND SPA SERVING ---
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+    if os.path.isdir(DIST_DIR):
+        target = os.path.join(DIST_DIR, path)
+        if path and os.path.isfile(target):
+            return send_from_directory(DIST_DIR, path)
+        index_path = os.path.join(DIST_DIR, 'index.html')
+        if os.path.isfile(index_path):
+            return send_from_directory(DIST_DIR, 'index.html')
+    return jsonify({
+        'message': 'GEO-SAR API is running. Build the frontend (npm --prefix web run build) to serve the UI.'
+    })
+
 if __name__ == '__main__':
-    print("Starting GEO-SAR Backend Server on port 5000...")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    port = int(os.environ.get('PORT', 5000))
+    print(f"Starting GEO-SAR Backend Server on port {port}...")
+    app.run(host='0.0.0.0', port=port, debug=False)

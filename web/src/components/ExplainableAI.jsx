@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Eye, Zap, Layers, Activity, HelpCircle, BarChart2 } from 'lucide-react';
+import { API_BASE } from '../config';
 
 export default function ExplainableAI({ selectedSample, predictionData }) {
   const [xaiData, setXaiData] = useState(null);
@@ -17,7 +18,7 @@ export default function ExplainableAI({ selectedSample, predictionData }) {
   const fetchExplainability = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/explainability', {
+      const res = await axios.post(`${API_BASE}/explainability`, {
         seed: selectedSample?.seed || 101,
       });
       setXaiData(res.data);

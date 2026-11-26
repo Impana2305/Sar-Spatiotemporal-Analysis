@@ -1,2 +1,5 @@
 
 models/*.pth
+!models/best_autoencoder.pth
+!models/best_temporal_model.pth
+!models/encoder.pth

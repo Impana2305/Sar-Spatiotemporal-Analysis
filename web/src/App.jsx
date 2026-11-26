@@ -7,8 +7,7 @@ import ExplainableAI from './components/ExplainableAI';
 import Hydrograph from './components/Hydrograph';
 import LandUse from './components/LandUse';
 import UploadPipeline from './components/UploadPipeline';
-
-const API_BASE = 'http://localhost:5000/api';
+import { API_BASE } from './config';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');

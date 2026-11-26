@@ -1,0 +1,15 @@
+.git
+.gitignore
+__pycache__
+**/__pycache__
+*.pyc
+web/node_modules
+web/dist
+data
+notebooks
+create_notebooks.py
+run_notebooks.py
+train.py
+dataset.py
+test_confidence.py
+README.md

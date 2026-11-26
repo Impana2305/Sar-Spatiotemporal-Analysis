@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { PieChart as RePie, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { PieChart, Trees, Building2, Droplets, Mountain } from 'lucide-react';
+import { API_BASE } from '../config';
 
 export default function LandUse({ selectedSample, predictionData }) {
   const [landData, setLandData] = useState(null);
@@ -18,7 +19,7 @@ export default function LandUse({ selectedSample, predictionData }) {
   const fetchLandUse = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/landuse', {
+      const res = await axios.post(`${API_BASE}/landuse`, {
         seed: selectedSample?.seed || 101,
       });
       setLandData(res.data);
